@@ -302,14 +302,14 @@ let moonLanded   = false;
 let moonDelay    = 0;
 let moonCraters  = [];
 
-const WIN_SCORE = 20000;
+const WIN_SCORE = 15000;
 
 const MILESTONES = [
   { score: 500,        label: 'Sputnik 1 (1957)',   emoji: '' },
   { score: 2000,       label: 'Vostok 1 (1961)',    emoji: '' },
   { score: 4000,       label: 'Mercury (1962)',      emoji: '' },
   { score: 7000,       label: 'Gemini (1965)',       emoji: '' },
-  { score: 12000,       label: 'Apollo 8 (1968)',     emoji: '' },
+  { score: 11000,       label: 'Apollo 8 (1968)',     emoji: '' },
   { score: WIN_SCORE,  label: 'Apollo 11 (1969)', emoji: '' },
 ];
 
@@ -520,6 +520,7 @@ function updatePlay() {
   player.thrusting = thrusting;
   if (player.invincible > 0) player.invincible--;
   if (thrusting) fuel = Math.max(0, fuel - 0.05);
+  if (!thrusting) fuel = Math.max(0, fuel -0.001);
 
   score    += 1;
   altitude += speed * 0.12;
