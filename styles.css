@@ -505,3 +505,25 @@ body {
   width: 20px;
   height: 20px;
 }
+
+.image {
+  display: inline-block;       /* keeps it compact */
+  text-align: center;          /* centers text under image */
+  font-family: Arial, sans-serif;
+  max-width: 300px;            /* optional max width */
+  margin: 10px;                /* spacing around it */
+}
+
+.image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;          /* optional rounded corners */
+}
+
+.image .caption {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+}
