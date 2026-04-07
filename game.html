@@ -496,7 +496,7 @@ function drawEarth(scroll) {
    ═══════════════════════════════════════════════════ */
 function updatePlay() {
   speed = 4 + score / 3000;
-  const accel = 0.35, maxV = 5.5, drag = 0.88;
+  const accel = 0.70, maxV = 5.5, drag = 0.88;
 
   let thrusting = false;
   if (keys['ArrowLeft']  || keys['a'] || keys['A']) { player.vx -= accel; thrusting = true; }
