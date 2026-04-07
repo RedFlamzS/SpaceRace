@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+   <link
+      href="data:image/x-icon;base64,AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAjBkTADAv7gCRMC4Ajh0YAJIwLgDv5+YAkS4rAP79/QCcQj8AkTAtAJIwLQD///8AUySnANGvrQC1d3UAixgTAI8lIQCvbGkAHRvyAPbv7wCYPToAjicjAI8nIwAbGvMAHhvxAI4wOACUMSIA8+rqANm7uwCydHIAkS8sAPr19QCOJCAAkTEuAI8kIACSMS4AzamoAKVJSAChUlAAjiYiACEb7wDUtLMAJBztAJExLQCSMS0AXyeWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALS0tCwsAAAAAAAAAAAAtJCUkJC0oJCMAAAAAAAAKCiIDAwMDCQcDJAAAAAAALCIsGiwsLCwiJywAAAAAAyIDIiIZIgMDFRwPAAAAAA0RIRAEBAQqHQEkASQAAAAFDAwTCAwkHwwKFAwkAAAAJAwGJCQMKwwkGQwtJAAAAAosLCIiIiIbKykuLCIAAAAkJCQeCwskJiQLKysAAAAAACQkBxIFICQkJCQYKwAAAAAKCwoWHwoLCgsKAAACAAAAACwsLCwsDgosFwAAAAAAAAAAAAMiJCQkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//AAD4PwAA4A8AAMAHAADABwAAgAcAAIADAACAAwAAgAMAAIADAACABwAAwAMAAMANAADgDwAA+D8AAP//AAA="
+      rel="icon"
+      type="image/x-icon"
+    />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Space Race Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<script defer src="script.js"></script>
+<style>
+:root {
+  --bg:      #0f1724;
+  --panel:   #172032;
+  --panel-2: #111827;
+  --text:    #e5eef8;
+  --muted:   #9aa8b8;
+  --accent:  #60a5fa;
+  --accent2: #f59e0b;
+  --accent3: #34d399;
+  --danger:  #f87171;
+  --border:  #2a3648;
+  --shadow:  0 4px 12px rgba(0,0,0,0.3);
+  --radius:  18px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  user-select: none;
+}
+
+.topbar2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 5vw;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 20;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 1.3rem;
+}
+.brand h1 { font-family: 'Share Tech Mono', sans-serif; font-size: 1.05rem; letter-spacing: 0.08em; }
+.brand p  { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+
+.hud-bar { display: flex; gap: 20px; align-items: center; }
+.hud-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 999px; padding: 8px 16px;
+  font-size: 0.85rem; letter-spacing: 0.05em;
+}
+.hud-chip .label { color: var(--muted); }
+.hud-chip .val   { color: var(--accent); font-weight: bold; font-family: 'Share Tech Mono', sans-serif; }
+.hud-chip.lives .val { color: var(--danger); }
+.hud-chip.fuel  .val { color: var(--accent3); }
+
+#game-wrap {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 73px);
+  overflow: hidden;
+}
+
+canvas { display: block; width: 100%; height: 100%; }
+
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 22px;
+  background: rgba(10,16,28,0.88);
+  z-index: 15;
+  transition: opacity 0.2s ease;
+}
+.overlay.hidden { opacity: 0; pointer-events: none; }
+
+.overlay-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 36px 44px;
+  text-align: center; box-shadow: var(--shadow);
+  max-width: 460px; width: 92vw;
+}
+.overlay-card h2 {
+  font-family: 'Share Tech Mono', sans-serif;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  margin-bottom: 14px; color: var(--accent);
+}
+.overlay-card .subtitle {
+  color: var(--muted); line-height: 1.65; font-size: 0.9rem; margin-bottom: 6px;
+}
+.controls-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 10px; margin: 18px 0; text-align: left;
+}
+.ctrl-row { display: flex; gap: 10px; align-items: center; font-size: 0.82rem; color: var(--muted); }
+.kbd {
+  display: inline-block; padding: 3px 9px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--accent);
+  font-family: 'Share Tech Mono', sans-serif; font-size: 0.75rem; white-space: nowrap;
+}
+.milestone-banner {
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 16px; margin: 12px 0 0;
+  font-size: 0.8rem; color: var(--muted); text-align: left;
+}
+.milestone-banner span { color: var(--accent2); font-weight: bold; }
+
+.btn-primary {
+  display: inline-block; margin-top: 14px; padding: 12px 32px;
+  background: var(--accent); color: #0f1724;
+  font-family: 'Share Tech Mono', sans-serif; font-size: 0.9rem;
+  font-weight: 700; letter-spacing: 0.08em; border: none;
+  border-radius: 999px; cursor: pointer; transition: opacity 0.15s ease;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:active { opacity: 0.7; }
+
+.win-icon { font-size: 2.8rem; margin-bottom: 4px; }
+
+#toast {
+  position: absolute; top: 18px; left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 20px;
+  font-family: 'Share Tech Mono', sans-serif; font-size: 0.78rem; color: var(--accent2);
+  z-index: 18; transition: transform 0.3s ease;
+  white-space: nowrap; pointer-events: none;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 700px) {
+  .topbar { padding: 10px 4vw; gap: 10px; flex-wrap: wrap; }
+  .brand h1 { font-size: 0.9rem; }
+  .hud-bar { gap: 8px; }
+  .hud-chip { padding: 6px 10px; font-size: 0.75rem; }
+  .overlay-card { padding: 28px 22px; }
+  .controls-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+  <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <img
+            src="data:image/x-icon;base64,AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAjBkTADAv7gCRMC4Ajh0YAJIwLgDv5+YAkS4rAP79/QCcQj8AkTAtAJIwLQD///8AUySnANGvrQC1d3UAixgTAI8lIQCvbGkAHRvyAPbv7wCYPToAjicjAI8nIwAbGvMAHhvxAI4wOACUMSIA8+rqANm7uwCydHIAkS8sAPr19QCOJCAAkTEuAI8kIACSMS4AzamoAKVJSAChUlAAjiYiACEb7wDUtLMAJBztAJExLQCSMS0AXyeWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALS0tCwsAAAAAAAAAAAAtJCUkJC0oJCMAAAAAAAAKCiIDAwMDCQcDJAAAAAAALCIsGiwsLCwiJywAAAAAAyIDIiIZIgMDFRwPAAAAAA0RIRAEBAQqHQEkASQAAAAFDAwTCAwkHwwKFAwkAAAAJAwGJCQMKwwkGQwtJAAAAAosLCIiIiIbKykuLCIAAAAkJCQeCwskJiQLKysAAAAAACQkBxIFICQkJCQYKwAAAAAKCwoWHwoLCgsKAAACAAAAACwsLCwsDgosFwAAAAAAAAAAAAMiJCQkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//AAD4PwAA4A8AAMAHAADABwAAgAcAAIADAACAAwAAgAMAAIADAACABwAAwAMAAMANAADgDwAA+D8AAP//AAA="
+            alt="Nasa Logo"
+          >
+        </div>
+        <div>
+          <h1>Space Race History</h1>
+          <p>By William Smith</p>
+        </div>
+      </div>
+
+      <nav class="tabs">
+        <a href="index.html" class="tab-link">Home</a>
+        <a href="inventions.html" class="tab-link">Inventions</a>
+        <a href="people.html" class="tab-link">People</a>
+        <a href="timeline.html" class="tab-link">Timeline</a>
+        <a href="coldwar.html" class="tab-link">Cold War Effects</a>
+        <a href="game.html" class="tab-link">Space Race Game</a>
+      </nav>
+
+      <div class="hud-bar">
+    <div class="hud-chip">
+      <span class="label">SCORE</span><span class="val" id="hud-score">0</span>
+    </div>
+    <div class="hud-chip">
+      <span class="label">ALTITUDE</span><span class="val" id="hud-alt">0 km</span>
+    </div>
+    <div class="hud-chip fuel">
+      <span class="label">FUEL</span><span class="val" id="hud-fuel">100%</span>
+    </div>
+    <div class="hud-chip lives">
+      <span class="label">LIVES</span><span class="val" id="hud-lives">❤❤❤</span>
+    </div>
+  </div>
+
+      <label class="theme-switch">
+      </label>
+    </header>
+
+
+
+<div id="game-wrap">
+  <canvas id="c"></canvas>
+
+  <!-- START -->
+  <div class="overlay" id="start-screen">
+    <div class="overlay-card">
+      <h2>SPACE RACE</h2>
+      <p class="subtitle"><br/>Launch from Earth, dodge debris, and land on the Moon!</p>
+      <div class="controls-grid">
+        <div class="ctrl-row"><span class="kbd">↑ ↓ ← →</span> Move rocket</div>
+        <div class="ctrl-row"><span class="kbd">WASD</span> Move rocket</div>
+        <div class="ctrl-row"><span class="kbd">SPACE</span> Boost</div>
+        <div class="ctrl-row"><span class="kbd">Touch</span> Tap to steer</div>
+      </div>
+      <div class="milestone-banner">
+        <span>MISSION —</span> Reach score 12,000 to begin lunar approach
+      </div>
+      <button class="btn-primary" id="start-btn">LAUNCH MISSION</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="overlay hidden" id="over-screen">
+    <div class="overlay-card">
+      <h2>MISSION FAILED</h2>
+      <p class="subtitle">Your rocket burned up in orbit.</p>
+      <div class="milestone-banner" style="margin-bottom:0">
+        <span>FINAL SCORE — </span><span id="final-score" style="color:var(--accent)">0</span>
+        &nbsp;&nbsp;<span>ALTITUDE — </span><span id="final-alt" style="color:var(--accent3)">0 km</span>
+      </div>
+      <div class="milestone-banner">
+        <span>MILESTONE — </span><span id="final-milestone" style="color:var(--accent2)">None</span>
+      </div>
+      <button class="btn-primary" id="retry-btn">RE-LAUNCH</button>
+    </div>
+  </div>
+
+  <!-- WIN -->
+  <div class="overlay hidden" id="win-screen">
+    <div class="overlay-card">
+      <div class="win-icon"></div>
+      <h2 style="color:var(--accent2)">YOU REACHED THE MOON</h2>
+      
+      <div class="milestone-banner" style="margin-bottom:0">
+        <span>FINAL SCORE — </span><span id="win-score" style="color:var(--accent)">0</span>
+        &nbsp;&nbsp;<span>ALTITUDE — </span><span id="win-alt" style="color:var(--accent3)">0 km</span>
+      </div>
+      <div class="milestone-banner">
+        <span>APOLLO 11 — </span><span style="color:var(--accent2)">July 20, 1969</span>
+      </div>
+      <button class="btn-primary" id="win-retry-btn">FLY AGAIN</button>
+    </div>
+  </div>
+
+  <div id="toast">🏆 MILESTONE</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   SPACE RACE GAME
+   States: start → launch → play → landing → win / over
+   ═══════════════════════════════════════════════════ */
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const $      = id => document.getElementById(id);
+const hudScore = $('hud-score'), hudAlt = $('hud-alt'),
+      hudFuel  = $('hud-fuel'),  hudLives = $('hud-lives');
+
+let W, H;
+function resize() {
+  const wrap = $('game-wrap');
+  W = canvas.width  = wrap.clientWidth;
+  H = canvas.height = wrap.clientHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ── State ─────────────────────────────────────────
+let state = 'start';
+let score, altitude, fuel, lives, frame, speed;
+let player, stars, asteroids, pickups, particles, exhaustP;
+let keys = {}, touchTarget = null, milestoneIdx;
+
+// Launch vars
+let launchTimer  = 0;
+const LAUNCH_DUR = 230;
+let earthScroll  = 0;
+const EARTH_R    = 800;
+
+// Landing vars
+let moonSurfY    = -300;
+let moonLanded   = false;
+let moonDelay    = 0;
+let moonCraters  = [];
+
+const WIN_SCORE = 20000;
+
+const MILESTONES = [
+  { score: 500,        label: 'Sputnik 1 (1957)',   emoji: '' },
+  { score: 2000,       label: 'Vostok 1 (1961)',    emoji: '' },
+  { score: 4000,       label: 'Mercury (1962)',      emoji: '' },
+  { score: 7000,       label: 'Gemini (1965)',       emoji: '' },
+  { score: 12000,       label: 'Apollo 8 (1968)',     emoji: '' },
+  { score: WIN_SCORE,  label: 'Apollo 11 (1969)', emoji: '' },
+];
+
+// ── Input ─────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === ' ') e.preventDefault();
+  if (e.key === ' ' && (state === 'start' || state === 'over' || state === 'win')) startGame();
+});
+document.addEventListener('keyup', e => keys[e.key] = false);
+canvas.addEventListener('touchstart', e => {
+  touchTarget = { x: e.touches[0].clientX, y: e.touches[0].clientY - canvas.getBoundingClientRect().top };
+}, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  touchTarget = { x: e.touches[0].clientX, y: e.touches[0].clientY - canvas.getBoundingClientRect().top };
+}, { passive: true });
+canvas.addEventListener('touchend', () => touchTarget = null, { passive: true });
+
+$('start-btn').addEventListener('click',     startGame);
+$('retry-btn').addEventListener('click',     startGame);
+$('win-retry-btn').addEventListener('click', startGame);
+
+// ── Init ──────────────────────────────────────────
+function init() {
+  score = 0; altitude = 0; fuel = 100; lives = 3;
+  frame = 0; speed = 2; milestoneIdx = 0;
+  launchTimer = 0; earthScroll = 0;
+  moonSurfY = -300; moonLanded = false; moonDelay = 0;
+
+  player = { x: W/2, y: H - 110, w: 28, h: 48, vx: 0, vy: 0, thrusting: false, invincible: 0 };
+
+  stars        = Array.from({length: 160}, makeStar);
+  asteroids    = [];
+  pickups      = [];
+  particles    = [];
+  exhaustP     = [];
+
+  moonCraters = Array.from({length: 10}, () => ({
+    x: 20 + Math.random() * Math.max(1, W - 40),
+    relY: 18 + Math.random() * 55,
+    r: 6 + Math.random() * 18,
+  }));
+}
+
+function makeStar() {
+  return {
+    x: Math.random() * (W||800), y: Math.random() * (H||600),
+    r: Math.random()*1.4+0.3, speed: Math.random()*0.6+0.2, alpha: Math.random()*0.7+0.3,
+  };
+}
+
+function startGame() {
+  init();
+  ['start-screen','over-screen','win-screen'].forEach(id => $(id).classList.add('hidden'));
+  state = 'launch';
+  lastTime = 0;
+  requestAnimationFrame(loop);
+}
+
+// ── Loop ──────────────────────────────────────────
+let lastTime = 0;
+function loop(ts) {
+  if (state === 'start' || state === 'win' || state === 'over') return;
+  const dt = Math.min((ts - lastTime) / 16.67, 3);
+  lastTime = ts;
+  frame++;
+
+  if      (state === 'launch')  { updateLaunch();  drawLaunch(); }
+  else if (state === 'play')    { updatePlay();    drawPlay(); }
+  else if (state === 'landing') { updateLanding(); drawLanding(); }
+
+  requestAnimationFrame(loop);
+}
+
+/* ═══════════════════════════════════════════════════
+   LAUNCH SEQUENCE
+   ═══════════════════════════════════════════════════ */
+function updateLaunch() {
+  launchTimer++;
+  const t = launchTimer / LAUNCH_DUR;
+
+  // Accelerating scroll speed — Earth falls away
+  const scrollSpd = 1.2 + t * 9;
+  earthScroll += scrollSpd;
+
+  // Rocket auto-rises, staying in lower third
+  player.vy = -scrollSpd * 0.52;
+  player.y  = Math.max(H * 0.30, player.y + player.vy);
+  player.x  = W / 2;
+  player.thrusting = true;
+
+  scrollStars(scrollSpd * 0.28);
+  if (frame % 2 === 0) spawnExhaust();
+  tickParticles();
+
+  if (launchTimer >= LAUNCH_DUR) {
+    state    = 'play';
+    player.y = H * 0.65;
+    player.vy = 0;
+    player.thrusting = false;
+  }
+}
+
+function drawLaunch() {
+  const t = launchTimer / LAUNCH_DUR;
+
+  // Sky fades from atmospheric blue to space black
+  const r = Math.round(10 + (1-t) * 15);
+  const g = Math.round(16 + (1-t) * 45);
+  const b = Math.round(36 + (1-t) * 90);
+  ctx.fillStyle = `rgb(${r},${g},${b})`;
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars fade in
+  drawStars(Math.max(0, (t - 0.2) / 0.8));
+
+  drawEarth(earthScroll);
+  drawExhaustParticles();
+  drawRocket(player.x, player.y, player.w, player.h, true, 0, frame);
+  drawBurstParticles();
+}
+
+function drawEarth(scroll) {
+  const cx = W / 2;
+  const cy = H + EARTH_R - 80 + scroll; // scrolls downward
+  if (cy - EARTH_R > H + 80) return;    // fully off screen
+
+  ctx.save();
+
+  // Ocean
+  ctx.beginPath();
+  ctx.arc(cx, cy, EARTH_R, 0, Math.PI*2);
+  ctx.fillStyle = '#1a4fa8';
+  ctx.fill();
+
+  // Continents (fixed angular positions so they don't shimmer)
+  const patches = [
+    {ax:-0.28, ay:-0.55, r:0.14},
+    {ax: 0.40, ay:-0.48, r:0.16},
+    {ax:-0.55, ay: 0.05, r:0.12},
+    {ax: 0.20, ay: 0.10, r:0.19},
+    {ax:-0.10, ay: 0.60, r:0.13},
+  ];
+  for (const p of patches) {
+    ctx.beginPath();
+    ctx.arc(cx + p.ax*EARTH_R, cy + p.ay*EARTH_R, p.r*EARTH_R, 0, Math.PI*2);
+    ctx.fillStyle = '#1d8348';
+    ctx.fill();
+  }
+
+  // Cloud bands
+  ctx.globalAlpha = 0.28;
+  for (const by of [-0.35, -0.05, 0.25]) {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + by*EARTH_R, EARTH_R*0.88, EARTH_R*0.055, 0.08, 0, Math.PI*2);
+    ctx.fillStyle = '#dbeafe';
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Atmosphere rim
+  const atmo = ctx.createRadialGradient(cx, cy, EARTH_R-5, cx, cy, EARTH_R+55);
+  atmo.addColorStop(0, 'rgba(96,165,250,0.30)');
+  atmo.addColorStop(1, 'rgba(96,165,250,0)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, EARTH_R+55, 0, Math.PI*2);
+  ctx.fillStyle = atmo;
+  ctx.fill();
+
+  // Launch pad on surface (only when visible near bottom)
+  const surfY = cy - EARTH_R;
+  if (surfY < H + 5 && surfY > -30) {
+    ctx.fillStyle = '#64748b';
+    ctx.fillRect(W/2 - 24, surfY - 10, 48, 10);  // pad
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(W/2 - 5,  surfY - 34, 10, 24);  // tower
+  }
+
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════
+   PLAY
+   ═══════════════════════════════════════════════════ */
+function updatePlay() {
+  speed = 2 + score / 3000;
+  const accel = 0.35, maxV = 5.5, drag = 0.88;
+
+  let thrusting = false;
+  if (keys['ArrowLeft']  || keys['a'] || keys['A']) player.vx -= accel;
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx += accel;
+  if (keys['ArrowUp']    || keys['w'] || keys['W']) { player.vy -= accel; thrusting = true; }
+  if (keys['ArrowDown']  || keys['s'] || keys['S']) player.vy += accel;
+  if (keys[' ']) { player.vy -= accel*1.4; thrusting = true; }
+  if (touchTarget) {
+    const dx = touchTarget.x - player.x, dy = touchTarget.y - player.y;
+    if (Math.abs(dx) > 12) player.vx += Math.sign(dx)*accel;
+    if (Math.abs(dy) > 12) player.vy += Math.sign(dy)*accel;
+    thrusting = true;
+  }
+
+  player.vx = Math.max(-maxV, Math.min(maxV, player.vx)) * drag;
+  player.vy = Math.max(-maxV, Math.min(maxV, player.vy)) * drag;
+  player.x += player.vx;
+  player.y += player.vy;
+  player.x = Math.max(player.w/2, Math.min(W-player.w/2, player.x));
+  player.y = Math.max(player.h/2, Math.min(H-player.h/2, player.y));
+  player.thrusting = thrusting;
+  if (player.invincible > 0) player.invincible--;
+  if (thrusting) fuel = Math.max(0, fuel - 0.05);
+
+  score    += 1;
+  altitude += speed * 0.12;
+
+  scrollStars(speed * 0.45);
+
+  // Asteroids
+  if (frame % Math.max(30, 70 - Math.floor(score/600)) === 0) asteroids.push(mkAsteroid());
+  for (let i = asteroids.length-1; i >= 0; i--) {
+    const a = asteroids[i];
+    a.x += a.vx; a.y += a.vy*(speed/2); a.rot += a.rotV;
+    if (a.y > H+60) { asteroids.splice(i,1); continue; }
+    if (player.invincible === 0 && circleRect(a.x, a.y, a.r*0.82,
+        player.x-player.w/2, player.y-player.h/2, player.w, player.h)) {
+      burst(player.x, player.y, 16, '#f87171', 4);
+      asteroids.splice(i,1);
+      lives--;
+      player.invincible = 120;
+      if (lives <= 0) { gameOver(); return; }
+    }
+  }
+
+  // Pickups
+  if (frame % 110 === 0) pickups.push(mkPickup());
+  for (let i = pickups.length-1; i >= 0; i--) {
+    const p = pickups[i];
+    p.y += p.vy*(speed/2); p.pulse += 0.08;
+    if (p.y > H+30) { pickups.splice(i,1); continue; }
+    if (circleRect(p.x, p.y, p.r*0.9, player.x-player.w/2, player.y-player.h/2, player.w, player.h)) {
+      pickups.splice(i,1);
+      if (p.type==='fuel')   { fuel=Math.min(100,fuel+30); burst(p.x,p.y,8,'#34d399',3); score+=50; }
+      if (p.type==='star')   { score+=200; burst(p.x,p.y,12,'#f59e0b',3); }
+      if (p.type==='shield') { player.invincible=200; burst(p.x,p.y,8,'#c084fc',3); }
+    }
+  }
+
+  if (frame % 2 === 0) spawnExhaust();
+  tickParticles();
+
+  // Milestones
+  if (milestoneIdx < MILESTONES.length && score >= MILESTONES[milestoneIdx].score) {
+    const m = MILESTONES[milestoneIdx++];
+    showToast(`${m.emoji} ${m.label}`);
+    if (score >= WIN_SCORE) {
+      asteroids.length = 0; pickups.length = 0;
+      moonSurfY = -320; moonLanded = false; moonDelay = 0;
+      moonCraters = Array.from({length:10}, () => ({
+        x: 20+Math.random()*Math.max(1,W-40), relY: 18+Math.random()*55, r: 6+Math.random()*18,
+      }));
+      state = 'landing';
+      return;
+    }
+  }
+
+  updateHUD();
+}
+
+function drawPlay() {
+  ctx.fillStyle = '#0a1020';
+  ctx.fillRect(0, 0, W, H);
+  drawStars(1);
+  drawExhaustParticles();
+  for (const a of asteroids) drawAsteroid(a);
+  for (const p of pickups)   drawPickup(p);
+  drawRocket(player.x, player.y, player.w, player.h, player.thrusting, player.invincible, frame);
+  drawBurstParticles();
+}
+
+/* ═══════════════════════════════════════════════════
+   LANDING SEQUENCE
+   ═══════════════════════════════════════════════════ */
+function updateLanding() {
+  // Moon surface descends, decelerating
+  if (!moonLanded) {
+    const moonSpd = Math.max(0.35, 3.8 - (moonSurfY + 320) * 0.008);
+    moonSurfY += moonSpd;
+  }
+
+  scrollStars(0.22);
+
+  // Auto-steer rocket toward center, decelerate
+  player.vx += (W/2 - player.x) * 0.018;
+  player.vx *= 0.87;
+  player.vy *= 0.91;
+  player.x  += player.vx;
+  player.y  += player.vy;
+  player.x   = Math.max(player.w/2, Math.min(W-player.w/2, player.x));
+  player.y   = Math.max(player.h/2, Math.min(H-player.h/2, player.y));
+
+  // Landing contact: terrain bottom edge ~moonSurfY + 100
+  const terrainBottom = moonSurfY + 100;
+  if (!moonLanded && terrainBottom >= player.y - player.h/2) {
+    moonLanded  = true;
+    player.y    = terrainBottom + player.h/2;
+    player.vx   = 0; player.vy = 0;
+    burst(player.x, player.y + player.h*0.4, 28, '#e5eef8', 3.5);
+    burst(player.x, player.y + player.h*0.4, 12, '#f59e0b', 2.5);
+    moonDelay = 170;
+  }
+
+  if (moonLanded) {
+    moonDelay--;
+    if (moonDelay <= 0) gameWin();
+  }
+
+  if (!moonLanded && frame % 2 === 0) spawnExhaust();
+  tickParticles();
+  updateHUD();
+}
+
+function drawLanding() {
+  ctx.fillStyle = '#060c18';
+  ctx.fillRect(0, 0, W, H);
+  drawStars(1);
+  drawMoonSurface();
+  drawExhaustParticles();
+  drawRocket(player.x, player.y, player.w, player.h, !moonLanded, 0, frame);
+  drawBurstParticles();
+}
+
+function drawMoonSurface() {
+  const baseY = moonSurfY;
+  if (baseY + 100 < -10) return;
+
+  // Solid moon body above terrain
+  ctx.fillStyle = '#3d4a56';
+  ctx.fillRect(0, 0, W, Math.max(0, baseY + 100));
+
+  // Bumpy terrain profile
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, baseY + 80);
+  for (let x = 0; x <= W; x += Math.max(1, W/24)) {
+    const bY = Math.sin(x*0.07)*14 + Math.cos(x*0.03)*9;
+    ctx.lineTo(x, baseY + 72 + bY);
+  }
+  ctx.lineTo(W, baseY + 100);
+  ctx.lineTo(W, 0);
+  ctx.closePath();
+  ctx.fillStyle = '#4a5a68';
+  ctx.fill();
+
+  // Craters
+  for (const c of moonCraters) {
+    const cy = baseY + c.relY;
+    if (cy < -c.r || cy > H + c.r) continue;
+    ctx.beginPath();
+    ctx.arc(c.x, cy, c.r, 0, Math.PI*2);
+    ctx.fillStyle = '#333f4a';
+    ctx.fill();
+    ctx.strokeStyle = '#5a6a78';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Landing pad (golden)
+  const padY = baseY + 86;
+  if (padY > -5 && padY < H + 5) {
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(W/2 - 40, padY, 80, 5);
+  }
+
+  // Flag — appears once landed
+  if (moonLanded) {
+    const flagX = W/2 + 22, fBase = padY;
+    ctx.strokeStyle = '#e5eef8'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(flagX, fBase); ctx.lineTo(flagX, fBase-44); ctx.stroke();
+    // Simplified stars-and-stripes
+    ctx.fillStyle = '#ef4444'; ctx.fillRect(flagX, fBase-44, 26, 10);
+    ctx.fillStyle = '#e5eef8'; ctx.fillRect(flagX, fBase-35, 26, 5);
+    ctx.fillStyle = '#1d4ed8'; ctx.fillRect(flagX, fBase-44, 11, 8);
+    ctx.fillStyle = '#e5eef8';
+    for (let row = 0; row < 3; row++) for (let col = 0; col < 2; col++) {
+      ctx.fillRect(flagX+1.5+col*4.5, fBase-43+row*2.2, 2, 1.5);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   SHARED DRAW FUNCTIONS
+   ═══════════════════════════════════════════════════ */
+function drawStars(alphaScale) {
+  for (const s of stars) {
+    ctx.globalAlpha = s.alpha * alphaScale;
+    ctx.fillStyle   = '#e5eef8';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawRocket(x, y, w, h, thrusting, invincible, frm) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (invincible > 0 && Math.floor(frm/5) % 2 === 0) { ctx.restore(); return; }
+
+  // Fuselage
+  ctx.beginPath();
+  ctx.moveTo(0, -h/2);
+  ctx.quadraticCurveTo(w/2, 0, w/2, h*0.3);
+  ctx.lineTo(-w/2, h*0.3);
+  ctx.quadraticCurveTo(-w/2, 0, 0, -h/2);
+  ctx.closePath();
+  ctx.fillStyle = '#c0d8f8';
+  ctx.fill();
+
+  // Porthole
+  ctx.beginPath(); ctx.arc(0, -h*0.12, w*0.22, 0, Math.PI*2);
+  ctx.fillStyle = '#93c5fd'; ctx.fill();
+  ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Fins
+  ctx.beginPath(); ctx.moveTo(-w/2,h*0.1); ctx.lineTo(-w*0.95,h*0.42); ctx.lineTo(-w/2,h*0.35); ctx.closePath();
+  ctx.fillStyle = '#3b82f6'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(w/2,h*0.1); ctx.lineTo(w*0.95,h*0.42); ctx.lineTo(w/2,h*0.35); ctx.closePath();
+  ctx.fillStyle = '#3b82f6'; ctx.fill();
+
+  // Nozzle
+  ctx.fillStyle = '#1e40af'; ctx.fillRect(-w*0.25, h*0.28, w*0.5, h*0.15);
+
+  // Stripe
+  ctx.fillStyle = '#ef4444'; ctx.fillRect(-w*0.45, h*0.02, w*0.9, h*0.08);
+
+  ctx.restore();
+}
+
+function drawAsteroid(a) {
+  ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot);
+  if (a.type === 'satellite') {
+    ctx.fillStyle = '#fbbf24'; ctx.fillRect(-a.r,-4,a.r*2,8);
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillRect(-a.r*1.8,-a.r*0.7,a.r*0.6,a.r*1.4);
+    ctx.fillRect( a.r*1.2,-a.r*0.7,a.r*0.6,a.r*1.4);
+    ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fillStyle='#e5eef8'; ctx.fill();
+  } else {
+    const pts = 7;
+    ctx.beginPath();
+    for (let i=0; i<pts; i++) {
+      const ang = (i/pts)*Math.PI*2;
+      const jr  = a.r*(0.75+Math.sin(i*2.3)*0.25);
+      i===0 ? ctx.moveTo(Math.cos(ang)*jr, Math.sin(ang)*jr)
+            : ctx.lineTo(Math.cos(ang)*jr, Math.sin(ang)*jr);
+    }
+    ctx.closePath();
+    ctx.fillStyle   = a.type==='debris' ? '#475569' : '#64748b';
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+    ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPickup(p) {
+  ctx.save(); ctx.translate(p.x, p.y);
+  const sc = 1 + Math.sin(p.pulse)*0.12; ctx.scale(sc,sc);
+  if (p.type==='fuel') {
+    ctx.fillStyle='#34d399'; ctx.beginPath(); ctx.arc(0,0,p.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#0a1020'; ctx.font=`${p.r*1.3}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('⛽',0,1);
+  } else if (p.type==='star') {
+    ctx.fillStyle='#f59e0b'; drawStarShape(0,0,5,p.r,p.r*0.45);
+  } else {
+    ctx.strokeStyle='#c084fc'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,0,p.r,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='rgba(192,132,252,0.2)'; ctx.fill();
+    ctx.fillStyle='#e9d5ff'; ctx.font=`${p.r*1.2}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🛡',0,1);
+  }
+  ctx.restore();
+}
+
+function drawStarShape(cx, cy, spikes, outerR, innerR) {
+  let rot=-Math.PI/2; const step=Math.PI/spikes;
+  ctx.beginPath();
+  for (let i=0; i<spikes*2; i++) {
+    const r = i%2===0 ? outerR : innerR;
+    ctx.lineTo(cx+Math.cos(rot)*r, cy+Math.sin(rot)*r); rot+=step;
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+function drawExhaustParticles() {
+  for (const p of exhaustP) {
+    ctx.save();
+    ctx.globalAlpha = p.alpha*0.75;
+    ctx.fillStyle   = p.alpha>0.5 ? '#fbbf24' : '#ef4444';
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawBurstParticles() {
+  for (const p of particles) {
+    ctx.save(); ctx.globalAlpha=p.life; ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   FACTORIES & UTILITIES
+   ═══════════════════════════════════════════════════ */
+function mkAsteroid() {
+  const type = Math.random()<0.15?'satellite':(Math.random()<0.4?'debris':'asteroid');
+  const r    = type==='satellite'?14:(Math.random()*16+8);
+  return { x:Math.random()*(W-60)+30, y:-r*2, r,
+    vx:(Math.random()-0.5)*1.8, vy:speed*(Math.random()*0.7+0.5),
+    rot:Math.random()*Math.PI*2, rotV:(Math.random()-0.5)*0.05, type };
+}
+
+function mkPickup() {
+  const types=['fuel','star','shield'];
+  return { x:Math.random()*(W-80)+40, y:-20, r:14,
+    vy:speed*0.55, type:types[Math.floor(Math.random()*types.length)], pulse:0 };
+}
+
+function spawnExhaust() {
+  exhaustP.push({ x:player.x+(Math.random()-0.5)*8, y:player.y+player.h/2-4,
+    vx:(Math.random()-0.5)*1.2, vy:Math.random()*2.5+1.5, r:Math.random()*5+2, alpha:0.85 });
+}
+
+function burst(x, y, n, color, spd) {
+  for (let i=0; i<n; i++) {
+    const a=Math.random()*Math.PI*2, s=(Math.random()+0.3)*spd;
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:Math.random()*3+1,life:1,color});
+  }
+}
+
+function tickParticles() {
+  for (let i=particles.length-1; i>=0; i--) {
+    const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.life-=0.025;
+    if (p.life<=0) particles.splice(i,1);
+  }
+  for (let i=exhaustP.length-1; i>=0; i--) {
+    const p=exhaustP[i]; p.x+=p.vx; p.y+=p.vy; p.alpha-=0.045; p.r*=0.96;
+    if (p.alpha<=0) exhaustP.splice(i,1);
+  }
+}
+
+function scrollStars(spd) {
+  for (const s of stars) {
+    s.y += s.speed * spd;
+    if (s.y > H) { s.y=-2; s.x=Math.random()*W; }
+  }
+}
+
+function circleRect(cx,cy,cr,rx,ry,rw,rh) {
+  const nx=Math.max(rx,Math.min(cx,rx+rw)), ny=Math.max(ry,Math.min(cy,ry+rh));
+  const dx=cx-nx,dy=cy-ny; return dx*dx+dy*dy<cr*cr;
+}
+
+function updateHUD() {
+  hudScore.textContent = score.toLocaleString();
+  hudAlt.textContent   = Math.floor(altitude/10) + ' km';
+  hudFuel.textContent  = Math.max(0,Math.floor(fuel)) + '%';
+  hudLives.textContent = '❤'.repeat(lives) + '♡'.repeat(Math.max(0,3-lives));
+}
+
+let toastTimer=null;
+function showToast(msg) {
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function gameOver() {
+  state='over';
+  const reached = milestoneIdx>0 ? MILESTONES[milestoneIdx-1].label : 'None';
+  $('final-score').textContent     = score.toLocaleString();
+  $('final-alt').textContent       = Math.floor(altitude/10)+' km';
+  $('final-milestone').textContent = reached;
+  $('over-screen').classList.remove('hidden');
+}
+
+function gameWin() {
+  state='win';
+  $('win-score').textContent = score.toLocaleString();
+  $('win-alt').textContent   = Math.floor(altitude/10)+' km';
+  $('win-screen').classList.remove('hidden');
+}
+
+resize();
+</script>
+</body>
+</html>
