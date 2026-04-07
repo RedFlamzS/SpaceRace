@@ -335,7 +335,7 @@ $('win-retry-btn').addEventListener('click', startGame);
 // ── Init ──────────────────────────────────────────
 function init() {
   score = 0; altitude = 0; fuel = 100; lives = 3;
-  frame = 0; speed = 16; milestoneIdx = 0;
+  frame = 0; speed = 2; milestoneIdx = 0;
   launchTimer = 0; earthScroll = 0;
   moonSurfY = -300; moonLanded = false; moonDelay = 0;
 
@@ -392,7 +392,7 @@ function updateLaunch() {
   const t = launchTimer / LAUNCH_DUR;
 
   // Accelerating scroll speed — Earth falls away
-  const scrollSpd = 1.2 + t * 9;
+  const scrollSpd = 2 + t * 9;
   earthScroll += scrollSpd;
 
   // Rocket auto-rises, staying in lower third
@@ -499,10 +499,10 @@ function updatePlay() {
   const accel = 0.35, maxV = 5.5, drag = 0.88;
 
   let thrusting = false;
-  if (keys['ArrowLeft']  || keys['a'] || keys['A']) player.vx -= accel;
-  if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx += accel;
+  if (keys['ArrowLeft']  || keys['a'] || keys['A']) { player.vx -= accel; thrusting = true; }
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) { player.vx += accel; thrusting = true; }
   if (keys['ArrowUp']    || keys['w'] || keys['W']) { player.vy -= accel; thrusting = true; }
-  if (keys['ArrowDown']  || keys['s'] || keys['S']) player.vy += accel;
+  if (keys['ArrowDown']  || keys['s'] || keys['S']) { player.vy += accel; thrusting = true; }
   if (keys[' ']) { player.vy -= accel*1.4; thrusting = true; }
   if (touchTarget) {
     const dx = touchTarget.x - player.x, dy = touchTarget.y - player.y;
