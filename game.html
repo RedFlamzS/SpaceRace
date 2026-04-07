@@ -263,6 +263,7 @@ canvas { display: block; width: 100%; height: 100%; }
   <div id="toast">🏆 MILESTONE</div>
 </div>
 
+<script>
 /* ═══════════════════════════════════════════════════
    SPACE RACE GAME
    States: start → launch → play → landing → win / over
@@ -288,7 +289,6 @@ let state = 'start';
 let score, altitude, fuel, lives, frame, speed;
 let player, stars, asteroids, pickups, particles, exhaustP;
 let keys = {}, touchTarget = null, milestoneIdx;
-let dt = 1; // global delta-time, updated each frame
 
 // Launch vars
 let launchTimer  = 0;
@@ -335,7 +335,7 @@ $('win-retry-btn').addEventListener('click', startGame);
 // ── Init ──────────────────────────────────────────
 function init() {
   score = 0; altitude = 0; fuel = 100; lives = 3;
-  frame = 0; speed = 8; milestoneIdx = 0;  // base speed doubled (was 4)
+  frame = 0; speed = 4; milestoneIdx = 0;
   launchTimer = 0; earthScroll = 0;
   moonSurfY = -300; moonLanded = false; moonDelay = 0;
 
@@ -373,8 +373,7 @@ function startGame() {
 let lastTime = 0;
 function loop(ts) {
   if (state === 'start' || state === 'win' || state === 'over') return;
-  // dt: 1.0 at 60 fps; scales movement so speed is frame-rate independent
-  dt = Math.min((ts - lastTime) / 16.67, 3);
+  const dt = Math.min((ts - lastTime) / 16.67, 3);
   lastTime = ts;
   frame++;
 
@@ -389,11 +388,11 @@ function loop(ts) {
    LAUNCH SEQUENCE
    ═══════════════════════════════════════════════════ */
 function updateLaunch() {
-  launchTimer += dt;
+  launchTimer++;
   const t = launchTimer / LAUNCH_DUR;
 
-  // Accelerating scroll speed — Earth falls away (doubled from original)
-  const scrollSpd = (2.4 + t * 18) * dt;
+  // Accelerating scroll speed — Earth falls away
+  const scrollSpd = 1.2 + t * 9;
   earthScroll += scrollSpd;
 
   // Rocket auto-rises, staying in lower third
@@ -496,9 +495,8 @@ function drawEarth(scroll) {
    PLAY
    ═══════════════════════════════════════════════════ */
 function updatePlay() {
-  // Base speed doubled (4→8) and scales faster with score
-  speed = 4 + score / 1500;
-  const accel = 0.35 * dt, maxV = 5.5, drag = Math.pow(0.88, dt);
+  speed = 2 + score / 3000;
+  const accel = 0.35, maxV = 5.5, drag = 0.88;
 
   let thrusting = false;
   if (keys['ArrowLeft']  || keys['a'] || keys['A']) player.vx -= accel;
@@ -515,26 +513,26 @@ function updatePlay() {
 
   player.vx = Math.max(-maxV, Math.min(maxV, player.vx)) * drag;
   player.vy = Math.max(-maxV, Math.min(maxV, player.vy)) * drag;
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
+  player.x += player.vx;
+  player.y += player.vy;
   player.x = Math.max(player.w/2, Math.min(W-player.w/2, player.x));
   player.y = Math.max(player.h/2, Math.min(H-player.h/2, player.y));
   player.thrusting = thrusting;
-  if (player.invincible > 0) player.invincible -= dt;
-  if (thrusting) fuel = Math.max(0, fuel - 0.05 * dt);
+  if (player.invincible > 0) player.invincible--;
+  if (thrusting) fuel = Math.max(0, fuel - 0.05);
 
-  score    += dt;
-  altitude += speed * 0.12 * dt;
+  score    += 1;
+  altitude += speed * 0.12;
 
-  scrollStars(speed * 0.45 * dt);
+  scrollStars(speed * 0.45);
 
-  // Asteroids — spawn interval scaled by dt accumulation
+  // Asteroids
   if (frame % Math.max(30, 70 - Math.floor(score/600)) === 0) asteroids.push(mkAsteroid());
   for (let i = asteroids.length-1; i >= 0; i--) {
     const a = asteroids[i];
-    a.x += a.vx * dt; a.y += a.vy * (speed/2) * dt; a.rot += a.rotV * dt;
+    a.x += a.vx; a.y += a.vy*(speed/2); a.rot += a.rotV;
     if (a.y > H+60) { asteroids.splice(i,1); continue; }
-    if (player.invincible <= 0 && circleRect(a.x, a.y, a.r*0.82,
+    if (player.invincible === 0 && circleRect(a.x, a.y, a.r*0.82,
         player.x-player.w/2, player.y-player.h/2, player.w, player.h)) {
       burst(player.x, player.y, 16, '#f87171', 4);
       asteroids.splice(i,1);
@@ -548,7 +546,7 @@ function updatePlay() {
   if (frame % 110 === 0) pickups.push(mkPickup());
   for (let i = pickups.length-1; i >= 0; i--) {
     const p = pickups[i];
-    p.y += p.vy * (speed/2) * dt; p.pulse += 0.08 * dt;
+    p.y += p.vy*(speed/2); p.pulse += 0.08;
     if (p.y > H+30) { pickups.splice(i,1); continue; }
     if (circleRect(p.x, p.y, p.r*0.9, player.x-player.w/2, player.y-player.h/2, player.w, player.h)) {
       pickups.splice(i,1);
@@ -594,20 +592,20 @@ function drawPlay() {
    LANDING SEQUENCE
    ═══════════════════════════════════════════════════ */
 function updateLanding() {
-  // Moon surface descends, decelerating — speed doubled
+  // Moon surface descends, decelerating
   if (!moonLanded) {
-    const moonSpd = Math.max(0.7, (7.6 - (moonSurfY + 320) * 0.016)) * dt;
+    const moonSpd = Math.max(0.35, 3.8 - (moonSurfY + 320) * 0.008);
     moonSurfY += moonSpd;
   }
 
-  scrollStars(0.22 * dt);
+  scrollStars(0.22);
 
   // Auto-steer rocket toward center, decelerate
-  player.vx += (W/2 - player.x) * 0.018 * dt;
-  player.vx *= Math.pow(0.87, dt);
-  player.vy *= Math.pow(0.91, dt);
-  player.x  += player.vx * dt;
-  player.y  += player.vy * dt;
+  player.vx += (W/2 - player.x) * 0.018;
+  player.vx *= 0.87;
+  player.vy *= 0.91;
+  player.x  += player.vx;
+  player.y  += player.vy;
   player.x   = Math.max(player.w/2, Math.min(W-player.w/2, player.x));
   player.y   = Math.max(player.h/2, Math.min(H-player.h/2, player.y));
 
@@ -623,7 +621,7 @@ function updateLanding() {
   }
 
   if (moonLanded) {
-    moonDelay -= dt;
+    moonDelay--;
     if (moonDelay <= 0) gameWin();
   }
 
@@ -852,13 +850,11 @@ function burst(x, y, n, color, spd) {
 
 function tickParticles() {
   for (let i=particles.length-1; i>=0; i--) {
-    const p=particles[i];
-    p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=0.06*dt; p.life-=0.025*dt;
+    const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.life-=0.025;
     if (p.life<=0) particles.splice(i,1);
   }
   for (let i=exhaustP.length-1; i>=0; i--) {
-    const p=exhaustP[i];
-    p.x+=p.vx*dt; p.y+=p.vy*dt; p.alpha-=0.045*dt; p.r*=Math.pow(0.96,dt);
+    const p=exhaustP[i]; p.x+=p.vx; p.y+=p.vy; p.alpha-=0.045; p.r*=0.96;
     if (p.alpha<=0) exhaustP.splice(i,1);
   }
 }
@@ -876,7 +872,7 @@ function circleRect(cx,cy,cr,rx,ry,rw,rh) {
 }
 
 function updateHUD() {
-  hudScore.textContent = Math.floor(score).toLocaleString();
+  hudScore.textContent = score.toLocaleString();
   hudAlt.textContent   = Math.floor(altitude/10) + ' km';
   hudFuel.textContent  = Math.max(0,Math.floor(fuel)) + '%';
   hudLives.textContent = '❤'.repeat(lives) + '♡'.repeat(Math.max(0,3-lives));
@@ -891,7 +887,7 @@ function showToast(msg) {
 function gameOver() {
   state='over';
   const reached = milestoneIdx>0 ? MILESTONES[milestoneIdx-1].label : 'None';
-  $('final-score').textContent     = Math.floor(score).toLocaleString();
+  $('final-score').textContent     = score.toLocaleString();
   $('final-alt').textContent       = Math.floor(altitude/10)+' km';
   $('final-milestone').textContent = reached;
   $('over-screen').classList.remove('hidden');
@@ -899,7 +895,7 @@ function gameOver() {
 
 function gameWin() {
   state='win';
-  $('win-score').textContent = Math.floor(score).toLocaleString();
+  $('win-score').textContent = score.toLocaleString();
   $('win-alt').textContent   = Math.floor(altitude/10)+' km';
   $('win-screen').classList.remove('hidden');
 }
