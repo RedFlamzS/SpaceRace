@@ -292,7 +292,7 @@ let keys = {}, touchTarget = null, milestoneIdx;
 
 // Launch vars
 let launchTimer  = 0;
-const LAUNCH_DUR = 230;
+const LAUNCH_DUR = 120;
 let earthScroll  = 0;
 const EARTH_R    = 800;
 
@@ -335,7 +335,7 @@ $('win-retry-btn').addEventListener('click', startGame);
 // ── Init ──────────────────────────────────────────
 function init() {
   score = 0; altitude = 0; fuel = 100; lives = 3;
-  frame = 0; speed = 2; milestoneIdx = 0;
+  frame = 0; speed = 4; milestoneIdx = 0;
   launchTimer = 0; earthScroll = 0;
   moonSurfY = -300; moonLanded = false; moonDelay = 0;
 
@@ -495,7 +495,7 @@ function drawEarth(scroll) {
    PLAY
    ═══════════════════════════════════════════════════ */
 function updatePlay() {
-  speed = 2 + score / 3000;
+  speed = 4 + score / 3000;
   const accel = 0.35, maxV = 5.5, drag = 0.88;
 
   let thrusting = false;
