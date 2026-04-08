@@ -198,6 +198,15 @@ body {
   padding: 22px;
 }
 
+.feature-box h3 {
+  margin-top: 0;
+}
+
+.feature-box p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .inventions-grid {
   margin-top: 22px;
   display: grid;
