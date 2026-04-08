@@ -192,7 +192,7 @@ body {
 
 .feature-box {
   margin-top: 24px;
-  background: var(--panel-2);
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 22px;
